@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Seguridad Vial Riobamba | Gestión v5</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="header-container">
+        <div class="header-badge">
+            <div class="subtitle">GESTIÓN DE SEGURIDAD VIAL</div>
+            <h1>RIOBAMBA SEGURA</h1>
+        </div>
+    </div>
+
+    <button class="panel-toggle" id="panelToggle" onclick="togglePanel()" aria-label="Menú">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <button class="dashboard-toggle" onclick="toggleDashboard()" aria-label="Estadísticas">
+        <i class="fa-solid fa-chart-pie"></i>
+    </button>
+
+    <div id="map"></div>
+
+    <div id="dashboardModal" class="dashboard-modal">
+        <div class="dashboard-content">
+            <div class="dashboard-header">
+                <h2><i class="fa-solid fa-chart-line"></i> Estadísticas en Tiempo Real</h2>
+                <button onclick="toggleDashboard()" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3>Incidentes por Tipo</h3>
+                    <canvas id="typeChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Evolución Temporal</h3>
+                    <canvas id="timeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-panel" id="mainPanel">
+        <div class="panel-drag-handle" id="panelHandle"></div>
+
+        <div class="panel-header">
+            <h2><i class="fa-solid fa-sliders"></i> Panel de Control</h2>
+        </div>
+
+        <div class="scroll-content">
+
+            <div class="section-card">
+                <div class="section-title">Filtros de Datos</div>
+                
+                <div class="date-filter-row">
+                    <div class="input-compact">
+                        <label>Desde</label>
+                        <input type="date" id="dateStart">
+                    </div>
+                    <div class="input-compact">
+                        <label>Hasta</label>
+                        <input type="date" id="dateEnd">
+                    </div>
+                </div>
+
+                <button class="btn-filter" onclick="aplicarFiltrosFecha()" style="width: 100%; margin-top: 10px; height: 36px; background: #334155; color: white; border: 1px solid #475569; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; font-size: 12px; transition: 0.2s;">
+                    <i class="fa-solid fa-filter"></i> Aplicar Filtros
+                </button>
+            </div>
+
+            <div class="section-card">
+                <div class="section-title">Visualización de Capas</div>
+
+                <div class="layers-compact">
+                    <label class="layer-row">
+                        <div class="layer-label">
+                            <span class="dot red"></span>
+                            <span>Accidentes (Histórico)</span>
+                        </div>
+                        <div class="toggle-wrapper">
+                            <input type="checkbox" id="accidentesLayer" checked>
+                            <div class="toggle-switch"></div>
+                        </div>
+                    </label>
+
+                    <label class="layer-row">
+                        <div class="layer-label">
+                            <span class="dot blue"></span>
+                            <span>Perímetro Urbano</span>
+                        </div>
+                        <div class="toggle-wrapper">
+                            <input type="checkbox" id="perimetroLayer">
+                            <div class="toggle-switch"></div>
+                        </div>
+                    </label>
+
+                    <label class="layer-row">
+                        <div class="layer-label">
+                            <span class="dot orange"></span>
+                            <span>Reportes (Ciudadanos)</span>
+                        </div>
+                        <div class="toggle-wrapper">
+                            <input type="checkbox" id="reportesLayer" checked>
+                            <div class="toggle-switch"></div>
+                        </div>
+                    </label>
+
+                    <label class="layer-row">
+                        <div class="layer-label">
+                            <span class="dot purple"></span>
+                            <span>Densidad (Solo Choques)</span>
+                        </div>
+                        <div class="toggle-wrapper">
+                            <input type="checkbox" id="heatmapToggle">
+                            <div class="toggle-switch"></div>
+                        </div>
+                    </label>
+                </div>
+                <div class="status-text" id="status">Datos sincronizados</div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-title">Nuevo Reporte</div>
+                <form id="reportForm" autocomplete="off">
+                    <button type="button" class="btn-location-compact" onclick="obtenerUbicacion()">
+                        <i class="fa-solid fa-location-crosshairs"></i> Usar Mi Ubicación
+                    </button>
+
+                    <div class="coords-row">
+                        <div class="input-compact">
+                            <label>Latitud</label>
+                            <input type="number" id="latitud" step="any" placeholder="0.00" readonly>
+                        </div>
+                        <div class="input-compact">
+                            <label>Longitud</label>
+                            <input type="number" id="longitud" step="any" placeholder="0.00" readonly>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="tipoReporte" value="Colisión Vehicular">
+
+                    <div class="input-group">
+                        <textarea id="descripcion" placeholder="Describa el incidente (Ej: 1 herido, daños materiales...)" rows="3"
+                            class="textarea-std"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-submit-compact">
+                        ENVIAR REPORTE
+                    </button>
+
+                    <button type="button" class="btn-pdf" onclick="descargarPDF()">
+                        <i class="fa-solid fa-file-pdf"></i> Descargar Informe
+                    </button>
+
+                    <div id="formStatus" class="form-status" style="display: none;"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
