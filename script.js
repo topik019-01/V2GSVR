@@ -9,7 +9,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:
 // Grupos de capas
 let accidentesLayerGroup = L.layerGroup().addTo(map);
 let perimetroLayerGroup = L.layerGroup();
-let reportesLayerGroup = L.layerGroup().addTo(map);
+let reportesLayerGroup = L.layerGroup(); // CAMBIO: Quitamos el .addTo(map)
 let heatmapLayer = null;
 let tempMarker = null;
 
